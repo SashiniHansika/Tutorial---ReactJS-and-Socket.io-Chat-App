@@ -1,10 +1,12 @@
+
 import React, { Component } from 'react';
 import FAChevronDown from 'react-icons/lib/md/keyboard-arrow-down'
-import FAMenu from 'react-icons/lib/fa/list-ul'
+
 import FASearch from 'react-icons/lib/fa/search'
 import MdEject from 'react-icons/lib/md/eject'
 
-export default class SideBar extends Component{
+
+export default class ChatHeadUser extends Component{
 	constructor(props){
 		super(props)
 		this.state = {
@@ -23,12 +25,10 @@ export default class SideBar extends Component{
 		const { chats, activeChat, user, setActiveChat, logout } = this.props
 		const { reciever } = this.state
 		return (
-			<div id="side-bar">
+			<div className="chat-header">
 					<div className="heading">
 						<div className="app-name">Chat With Suzy <FAChevronDown /></div>
-						<div className="menu">
-							<FAMenu />
-						</div>
+						
 					</div>
 					<form onSubmit={this.handleSubmit} className="search">
 						<i className="search-icon"><FASearch /></i>
@@ -47,7 +47,7 @@ export default class SideBar extends Component{
 						{
 						chats.map((chat)=>{
 							if(chat.name){
-								const lastMessage = chat.messages[chat.messages.length - 1];
+							
 								const chatSideName = chat.users.find((name)=>{
 									return name !== user.name
 								}) || "Community" 
@@ -59,10 +59,10 @@ export default class SideBar extends Component{
 									className={`user ${classNames}`}
 									onClick={ ()=>{ setActiveChat(chat) } }
 									>
-									<div className="user-photo">{chatSideName[0].toUpperCase()}</div>
+									
 									<div className="user-info">
 										<div className="name">{chatSideName}</div>
-										{lastMessage && <div className="last-message">{lastMessage.message}</div>}
+										
 									</div>
 									
 								</div>

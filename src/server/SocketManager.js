@@ -2,7 +2,7 @@ const io = require('./index.js').io
 
 const { VERIFY_USER, USER_CONNECTED, USER_DISCONNECTED, 
 		LOGOUT, COMMUNITY_CHAT, MESSAGE_RECIEVED, MESSAGE_SENT,
-		TYPING  } = require('../Events')
+		TYPING, PRIVATE_MESSAGE ,PRIVATE_MESSAGE_WITH_SUZY  } = require('../Events')
 
 const { createUser, createMessage, createChat } = require('../Factories')
 
@@ -17,6 +17,7 @@ module.exports = function(socket){
 
 	let sendMessageToChatFromUser;
 
+
 	let sendTypingFromUser;
 
 	//Verify Username
@@ -24,20 +25,29 @@ module.exports = function(socket){
 		if(isUser(connectedUsers, nickname)){
 			callback({ isUser:true, user:null })
 		}else{
-			callback({ isUser:false, user:createUser({name:nickname})})
+			if(nickname=="Suzy"){
+				callback({ isUser:false, user:({name:nickname, socketId:"adminSuzy123"})})
+			}else{
+				callback({ isUser:false, user:createUser({name:nickname, socketId:socket.id})})
+			}
+			
 		}
 	})
 
 	//User Connects with username
 	socket.on(USER_CONNECTED, (user)=>{
+		user.socketId = socket.id
 		connectedUsers = addUser(connectedUsers, user)
 		socket.user = user
 
-		sendMessageToChatFromUser = sendMessageToChat(user.name)
+		
+		
 		sendTypingFromUser = sendTypingToChat(user.name)
 
 		io.emit(USER_CONNECTED, connectedUsers)
 		console.log(connectedUsers);
+		sendMessageToChatFromUser = sendMessageToChat(user.name)
+		
 
 	})
 	
@@ -67,10 +77,22 @@ module.exports = function(socket){
 
 	socket.on(MESSAGE_SENT, ({chatId, message})=>{
 		sendMessageToChatFromUser(chatId, message)
+		
 	})
+
+	
 
 	socket.on(TYPING, ({chatId, isTyping})=>{
 		sendTypingFromUser(chatId, isTyping)
+	})
+
+	socket.on(PRIVATE_MESSAGE, ({reciever, sender})=>{
+		if(reciever in connectedUsers){
+			const newChat = createChat({ name:`${reciever}&${sender}`, users:[reciever, sender] })
+			const recieverSocket = connectedUsers[reciever].socketId
+			socket.to(recieverSocket).emit(PRIVATE_MESSAGE, newChat)
+			socket.emit(PRIVATE_MESSAGE, newChat)
+		}
 	})
 
 }
@@ -97,6 +119,8 @@ function sendMessageToChat(sender){
 		io.emit(`${MESSAGE_RECIEVED}-${chatId}`, createMessage({message, sender}))
 	}
 }
+
+
 
 /*
 * Adds user to list passed in.
